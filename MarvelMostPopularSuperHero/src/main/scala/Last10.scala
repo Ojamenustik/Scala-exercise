@@ -1,7 +1,7 @@
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.{SparkConf, SparkContext}
 
-object MostPopularHero {
+object Last10 {
 
   //Function to extract the heroID and number of connections from each line
   def countCoOcurrences(line: String) = {
@@ -36,19 +36,25 @@ object MostPopularHero {
     val pairings = lines.map(countCoOcurrences)
 
     //combine entries that span more than one line
-    val totalFriendsByCharacter = pairings.reduceByKey((x,y) => x + y)
+    val totalFriendsByCharacter = pairings.reduceByKey((x, y) => x + y)
 
     //Flip it to connections, heroId
-    val flipped = totalFriendsByCharacter.map( x => (x._2, x._1))
+    val flipped = totalFriendsByCharacter.map(x => (x._2, x._1))
 
     //Fined the max of connections
 
-    val mostPopular = flipped.max()
-
+    val leastPopular = flipped.sortByKey(true)
+    val leastNames = leastPopular.take(10)
+    var c:Int = 1
+    var i:Int = 0
     //Look up the name
-    val mostPopularName = namesRdd.lookup(mostPopular._2)(0)
+    for (x <- leastNames) {
+      val leastName = namesRdd.lookup(x._2)(0)
+      println(s"$leastName is the $c least popular superhero with ${x._1} connections")
+      c+=1
+    }
 
-    println(s"$mostPopularName is the most popular superhero with ${mostPopular._1} connections")
+
 
   }
 }
